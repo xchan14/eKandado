@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema path="/com/paysonwallach/greeter/" id="com.paysonwallach.greeter">
+    <key name="picture-options" enum="org.gnome.desktop.GDesktopBackgroundStyle">
+      <default>'zoom'</default>
+      <summary>Picture Options</summary>
+      <description>
+        Determines how the image set by wallpaper_filename is rendered.
+        Possible values are “none”, “wallpaper”, “centered”, “scaled”,
+        “stretched”, “zoom”, “spanned”.
+      </description>
+    </key>
+    <key type="s" name="picture-uri">
+      <default>''</default>
+      <summary>URI of current background</summary>
+      <description>URI of current background.</description>
+    </key>
+    <key name="picture-opacity" type="i">
+      <range min="0" max="100"/>
+      <default>100</default>
+      <summary>Picture Opacity</summary>
+      <description>
+        Opacity with which to draw the background picture.
+      </description>
+    </key>
+    <key name="primary-color" type="s">
+      <default>'#363636'</default>
+      <summary>Primary Color</summary>
+      <description>
+        Left or Top color when drawing gradients, or the solid color.
+      </description>
+    </key>
+    <key name="secondary-color" type="s">
+      <default>'#343434'</default>
+      <summary>Secondary Color</summary>
+      <description>
+        Right or Bottom color when drawing gradients, not used for solid color.
+      </description>
+    </key>
+    <key name="color-shading-type" enum="org.gnome.desktop.GDesktopBackgroundShading">
+      <default>'solid'</default>
+      <summary>Color Shading Type</summary>
+      <description>
+        How to shade the background color. Possible values are “horizontal”,
+        “vertical”, and “solid”.
+      </description>
+    </key>
+  </schema>
+</schemalist>
