@@ -1,0 +1,26 @@
+{
+  "name": "com.paysonwallach.greeter",
+  "version": "5.0.4",
+  "description": "LightDM Greeter for Pantheon",
+  "scripts": {
+    "lint": "find src/ -name '*.vala' -exec uncrustify -c uncrustify.cfg --replace {} \\;"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paysonwallach/greeter.git"
+  },
+  "author": "",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/paysonwallach/greeter/issues"
+  },
+  "homepage": "https://github.com/paysonwallach/greeter#readme",
+  "devDependencies": {
+    "husky": "^4.2.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint"
+    }
+  }
+}
