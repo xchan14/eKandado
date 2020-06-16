@@ -72,16 +72,16 @@ public class Greeter.SettingsDaemon : Object {
         n_names++;
         GLib.Bus.own_name (BusType.SESSION, "org.gnome.SessionManager", BusNameOwnerFlags.NONE,
                            (c) => {
-                               try {
-                                   c.register_object ("/org/gnome/SessionManager", session_manager);
-                               } catch (Error e) {
-                                   warning ("Failed to register /org/gnome/SessionManager: %s", e.message);
-                               }
-                           },
+            try {
+                c.register_object ("/org/gnome/SessionManager", session_manager);
+            } catch (Error e) {
+                warning ("Failed to register /org/gnome/SessionManager: %s", e.message);
+            }
+        },
                            () => {
-                               debug ("Acquired org.gnome.SessionManager");
-                               start_settings_daemon ();
-                           },
+            debug ("Acquired org.gnome.SessionManager");
+            start_settings_daemon ();
+        },
                            () => debug ("Failed to acquire name org.gnome.SessionManager"));
     }
 
@@ -94,6 +94,7 @@ public class Greeter.SettingsDaemon : Object {
             settings.set_boolean ("active", enabled);
         }
     }
+
 #endif
 
     private void start_settings_daemon () {
@@ -115,15 +116,16 @@ public class Greeter.SettingsDaemon : Object {
 
         foreach (var daemon in daemons) {
             try {
-                supervisors += new Greeter.SubprocessSupervisor ({Constants.GSD_DIR + daemon});
+                supervisors += new Greeter.SubprocessSupervisor ({ Constants.GSD_DIR + daemon });
             } catch (GLib.Error e) {
                 critical ("Could not start %s: %s", daemon, e.message);
             }
         }
     }
+
 }
 
-[DBus (name="org.gnome.SessionManager")]
+[DBus (name = "org.gnome.SessionManager")]
 public class Greeter.GnomeSessionManager : GLib.Object {
     private Gee.ArrayList<Greeter.GnomeSessionManagerClient> clients;
     private Gee.ArrayList<unowned Greeter.GnomeSessionManagerClient> inhibitors;
@@ -145,8 +147,7 @@ public class Greeter.GnomeSessionManager : GLib.Object {
         inhibitors = new Gee.ArrayList<unowned Greeter.GnomeSessionManagerClient> ();
     }
 
-    public void setenv (string variable, string value) throws GLib.Error {
-    }
+    public void setenv (string variable, string value) throws GLib.Error {}
 
     public string get_locale (int category) throws GLib.Error {
         return "C";
@@ -175,7 +176,7 @@ public class Greeter.GnomeSessionManager : GLib.Object {
                 new GLib.VariantType ("(u)"),
                 GLib.DBusCallFlags.NONE,
                 -1
-            );
+                );
             pid_variant.get ("(u)", out process_id);
         } catch (Error e) {
             critical (e.message);
@@ -199,9 +200,7 @@ public class Greeter.GnomeSessionManager : GLib.Object {
         return 0;
     }
 
-    public void uninhibit (uint inhibit_cookie) throws GLib.Error {
-
-    }
+    public void uninhibit (uint inhibit_cookie) throws GLib.Error {}
 
     public bool is_inhibited (uint flags) throws GLib.Error {
         return !inhibitors.is_empty;
@@ -221,25 +220,20 @@ public class Greeter.GnomeSessionManager : GLib.Object {
         return true;
     }
 
-    public void shutdown () throws GLib.Error {
+    public void shutdown () throws GLib.Error {}
 
-    }
-
-    public void reboot () throws GLib.Error {
-
-    }
+    public void reboot () throws GLib.Error {}
 
     public bool can_shutdown () throws GLib.Error {
         return true;
     }
 
-    public void logout (uint mode) throws GLib.Error {
-
-    }
+    public void logout (uint mode) throws GLib.Error {}
 
     public bool is_session_running () throws GLib.Error {
         return true;
     }
+
 }
 
 [DBus (name = "org.gnome.SessionManager.Client")]
@@ -290,6 +284,6 @@ public class Greeter.GnomeSessionManagerClient : GLib.Object {
         return 1;
     }
 
-    public void stop () throws GLib.Error {
-    }
+    public void stop () throws GLib.Error {}
+
 }

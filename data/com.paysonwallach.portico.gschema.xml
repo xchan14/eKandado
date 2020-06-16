@@ -10,8 +10,8 @@
         “stretched”, “zoom”, “spanned”.
       </description>
     </key>
-    <key type="s" name="picture-uri">
-      <default>''</default>
+    <key name="picture-uri" type="s">
+      <default>'file:///usr/share/backgrounds/elementaryos-default'</default>
       <summary>URI of current background</summary>
       <description>URI of current background.</description>
     </key>

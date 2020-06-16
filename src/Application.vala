@@ -42,7 +42,7 @@ public int main (string[] args) {
     Greeter.SubprocessSupervisor wingpanel;
 
     try {
-        compositor = new Greeter.SubprocessSupervisor ({"com.paysonwallach.portico-compositor"});
+        compositor = new Greeter.SubprocessSupervisor ({ "com.paysonwallach.portico-compositor" });
     } catch (Error e) {
         critical (e.message);
     }
@@ -51,7 +51,7 @@ public int main (string[] args) {
     window.show_all ();
 
     try {
-        wingpanel = new Greeter.SubprocessSupervisor ({"wingpanel", "-g"});
+        wingpanel = new Greeter.SubprocessSupervisor ({ "wingpanel", "-g" });
     } catch (Error e) {
         critical (e.message);
     }

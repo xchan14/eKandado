@@ -31,16 +31,9 @@
 public abstract class Greeter.BaseCard : Gtk.Revealer {
     public signal void do_connect (string? credential = null);
 
-    protected static Gtk.CssProvider css_provider;
-
     public bool connecting { get; set; default = false; }
     public bool need_password { get; set; default = false; }
     public bool use_fingerprint { get; set; default = false; }
-
-    static construct {
-        css_provider = new Gtk.CssProvider ();
-        css_provider.load_from_resource ("/io/elementary/greeter/Card.css");
-    }
 
     construct {
         width_request = 350;
@@ -63,6 +56,6 @@ public abstract class Greeter.BaseCard : Gtk.Revealer {
         });
     }
 
-    public virtual void wrong_credentials () {
-    }
+    public virtual void wrong_credentials () {}
+
 }

@@ -63,15 +63,7 @@ namespace GreeterCompositor {
 
         Meta.PluginInfo info;
 
-        //WindowSwitcher? winswitcher = null;
-        //ActivatableComponent? workspace_view = null;
-        //ActivatableComponent? window_overview = null;
-
-        //ScreenSaver? screensaver;
-
         Window? moving; //place for the window that is being moved over
-
-        //Gee.LinkedList<ModalProxy> modal_stack = new Gee.LinkedList<ModalProxy> ();
 
         Gee.HashSet<Meta.WindowActor> minimizing = new Gee.HashSet<Meta.WindowActor> ();
         Gee.HashSet<Meta.WindowActor> maximizing = new Gee.HashSet<Meta.WindowActor> ();
@@ -99,6 +91,7 @@ namespace GreeterCompositor {
             unowned Meta.Display display = get_screen ().get_display ();
 #endif
             display.gl_video_memory_purged.connect (() => {
+                Meta.Background.refresh_all ();
                 refresh_background ();
             });
         }
@@ -124,6 +117,7 @@ namespace GreeterCompositor {
             MediaFeedback.init ();
             DBus.init (this);
             DBusAccelerator.init (this);
+            WingpanelDBus.init (this);
 
 #if HAS_MUTTER330
             stage = display.get_stage () as Clutter.Stage;
@@ -157,6 +151,14 @@ namespace GreeterCompositor {
 #endif
             stage.remove_child (window_group);
             ui_group.add_child (window_group);
+
+#if HAS_MUTTER330
+            background_group = new BackgroundContainer (display);
+#else
+            background_group = new BackgroundContainer (screen);
+#endif
+            window_group.add_child (background_group);
+            window_group.set_child_below_sibling (background_group, null);
 
 #if HAS_MUTTER330
             top_window_group = display.get_top_window_group ();

@@ -49,6 +49,9 @@ public class Greeter.UserCard : Greeter.BaseCard {
     private Gtk.Stack login_stack;
     private weak Gtk.StyleContext main_grid_style_context;
     private Greeter.PasswordEntry password_entry;
+    private GLib.Settings settings;
+    private string background_uri;
+    private Gtk.Revealer card_revealer;
 
     construct {
         need_password = true;
@@ -59,7 +62,6 @@ public class Greeter.UserCard : Greeter.BaseCard {
 
         unowned Gtk.StyleContext username_label_context = username_label.get_style_context ();
         username_label_context.add_class (Granite.STYLE_CLASS_H2_LABEL);
-        username_label_context.add_provider (css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
 
         password_entry = new Greeter.PasswordEntry ();
 
@@ -119,9 +121,9 @@ public class Greeter.UserCard : Greeter.BaseCard {
         form_revealer.add (form_grid);
         bind_property ("show-input", form_revealer, "reveal-child", GLib.BindingFlags.SYNC_CREATE);
 
-        var background_path = lightdm_user.background;
+        settings = new GLib.Settings ("com.paysonwallach.portico");
 
-        if (background_path == null) {
+        if (background_uri == null) {
             string path = GLib.Path.build_filename ("/", "var", "lib", "lightdm-data", lightdm_user.name, "wallpaper");
             if (GLib.FileUtils.test (path, FileTest.EXISTS)) {
                 var background_directory = GLib.File.new_for_path (path);
@@ -131,7 +133,7 @@ public class Greeter.UserCard : Greeter.BaseCard {
                     GLib.FileInfo file_info;
                     while ((file_info = enumerator.next_file ()) != null) {
                         if (file_info.get_file_type () == GLib.FileType.REGULAR) {
-                            background_path = Path.build_filename (path, file_info.get_name ());
+                            background_uri = File.new_build_filename (path, file_info.get_name ()).get_uri ();
                             break;
                         }
                     }
@@ -141,27 +143,17 @@ public class Greeter.UserCard : Greeter.BaseCard {
             }
         }
 
-        var background_image = new Greeter.BackgroundImage (background_path);
-
         var main_grid = new Gtk.Grid ();
         main_grid.margin_bottom = 48;
         main_grid.orientation = Gtk.Orientation.VERTICAL;
-        main_grid.add (background_image);
-        main_grid.add (username_label);
-        main_grid.add (form_revealer);
-
-        main_grid_style_context = main_grid.get_style_context ();
-        main_grid_style_context.add_class (Granite.STYLE_CLASS_CARD);
-        main_grid_style_context.add_class ("rounded");
-        main_grid_style_context.add_provider (css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
 
         update_collapsed_class ();
 
         Granite.Widgets.Avatar avatar;
         if (lightdm_user.image != null) {
-            avatar = new Granite.Widgets.Avatar.from_file (lightdm_user.image, 64);
+            avatar = new Granite.Widgets.Avatar.from_file (lightdm_user.image, 128);
         } else {
-            avatar = new Granite.Widgets.Avatar.with_default_icon (64);
+            avatar = new Granite.Widgets.Avatar.with_default_icon (128);
         }
 
         var avatar_overlay = new Gtk.Overlay ();
@@ -180,12 +172,20 @@ public class Greeter.UserCard : Greeter.BaseCard {
             session_button.tooltip_text = (_("Session cannot be changed while user is logged in"));
         }
 
-        var card_overlay = new Gtk.Overlay ();
-        card_overlay.margin = 12;
-        card_overlay.add (main_grid);
-        card_overlay.add_overlay (avatar_overlay);
+        main_grid.add (avatar_overlay);
+        main_grid.add (username_label);
+        main_grid.add (form_revealer);
 
-        add (card_overlay);
+        main_grid_style_context = main_grid.get_style_context ();
+        main_grid_style_context.add_class ("user");
+
+        card_revealer = new Gtk.Revealer ();
+        card_revealer.margin = 12;
+        card_revealer.set_transition_type (Gtk.RevealerTransitionType.CROSSFADE);
+        card_revealer.set_reveal_child (true);
+        card_revealer.add (main_grid);
+
+        add (card_revealer);
 
         act_user = Act.UserManager.get_default ().get_user (lightdm_user.name);
         act_user.bind_property ("locked", username_label, "sensitive", GLib.BindingFlags.INVERT_BOOLEAN);
@@ -194,7 +194,7 @@ public class Greeter.UserCard : Greeter.BaseCard {
 
         on_act_user_loaded ();
 
-        card_overlay.focus.connect ((direction) => {
+        main_grid.focus.connect ((direction) => {
             if (direction == Gtk.DirectionType.LEFT) {
                 go_left ();
                 return true;
@@ -206,7 +206,7 @@ public class Greeter.UserCard : Greeter.BaseCard {
             return false;
         });
 
-        card_overlay.button_release_event.connect ((event) => {
+        main_grid.button_release_event.connect ((event) => {
             if (!show_input) {
                 focus_requested ();
                 password_entry.grab_focus ();
@@ -242,6 +242,7 @@ public class Greeter.UserCard : Greeter.BaseCard {
 
         grab_focus.connect (() => {
             password_entry.grab_focus_without_selecting ();
+            settings.set_string ("picture-uri", background_uri);
         });
     }
 
@@ -321,4 +322,9 @@ public class Greeter.UserCard : Greeter.BaseCard {
             return GLib.Source.REMOVE;
         });
     }
+
+    public void set_reveal (bool reveal) {
+        card_revealer.set_reveal_child (reveal);
+    }
+
 }

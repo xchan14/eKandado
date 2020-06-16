@@ -1,5 +1,3 @@
-
-# Dependencies
 glib_dep = [dependency('gio-2.0'),
   dependency('gio-unix-2.0'),
   dependency('gmodule-2.0')]
@@ -10,7 +8,7 @@ gee_dep = dependency('gee-0.8')
 m_dep = meson.get_compiler('c').find_library('m',
   required : false)
 
-# Mutter is a complicated library with many API changes, copied from Gala.
+# mutter is a complicated library with many API changes, copied from Gala
 mutter_dep = []
 libmutter_dep = []
 
@@ -77,7 +75,6 @@ endif
 
 mutter_typelib_dir = libmutter_dep.get_pkgconfig_variable('typelibdir')
 
-# Here is the real Compositor work
 compositor_files = files(
   'Animation.vala',
   'Background.vala',
@@ -89,12 +86,12 @@ compositor_files = files(
   'DBusAccelerator.vala',
   'MediaFeedback.vala',
   'SystemBackground.vala',
-  'Utils.vala'
+  'Utils.vala',
   'WindowManager.vala',
   'WingpanelBackgroundManager.vala',
   'WingpanelDBus.vala',
   'WingpanelUtils.vala',
-  'main.vala',
+  'main.vala'
 )
 
 executable(

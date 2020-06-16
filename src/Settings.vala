@@ -108,8 +108,7 @@ public class Greeter.Settings : GLib.Object {
         state = new GLib.KeyFile ();
         try {
             state.load_from_file (state_file, GLib.KeyFileFlags.NONE);
-        } catch (GLib.FileError.NOENT e) {
-        } catch (Error e) {
+        } catch (GLib.FileError.NOENT e) {} catch (Error e) {
             critical ("Failed to load state from %s: %s", state_file, e.message);
         }
 

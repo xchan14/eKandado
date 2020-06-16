@@ -45,29 +45,29 @@ namespace Greeter.FPrintUtils {
     }
 
     private inline string fprintd_message (string message) {
-        //return GLib.dgettext ("fprintd", message);
+        // return GLib.dgettext ("fprintd", message);
         return message;
     }
 
     public MessageText string_to_messagetext (string text) {
         // Ideally this would query PAM and ask which module is currently active,
         // but since we're running through LightDM we don't have that ability.
-        // There should at be a state machine to transition to and from the 
+        // There should at be a state machine to transition to and from the
         // active module depending on the messages recieved. But, this is can go
-        // wrong quickly. 
+        // wrong quickly.
         // The reason why this is needed is, for example, we can get the "An
-        // unknown error occured" message from pam_fprintd, but we can get it 
+        // unknown error occured" message from pam_fprintd, but we can get it
         // from some other random module as well. You never know.
-        // Maybe it's worth adding some LightDM/PAM functionality for this? 
-        // The PAM "feature" which makes it all tricky is that modules can send 
+        // Maybe it's worth adding some LightDM/PAM functionality for this?
+        // The PAM "feature" which makes it all tricky is that modules can send
         // arbitrary messages to the stream and it's hard to analyze or keep track
-        // of them programmatically. 
+        // of them programmatically.
         // Also, there doesn't seem to be a way to give the user a choice over
         // which module he wants to use to authenticate (ie. maybe today I have
         // a bandaid over my finger and I can't scan it so I have to wait for it
         // time out, if I didn't disable that in the settings)
-        // 
-        // These messages are taken from here: 
+        //
+        // These messages are taken from here:
         //  - https://gitlab.freedesktop.org/libfprint/fprintd/blob/master/pam/fingerprint-strings.h
         //  - https://gitlab.freedesktop.org/libfprint/fprintd/blob/master/pam/pam_fprintd.c
 
@@ -120,4 +120,5 @@ namespace Greeter.FPrintUtils {
 
         return false;
     }
+
 }

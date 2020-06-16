@@ -89,4 +89,5 @@ public class Greeter.CapsLockRevealer : Gtk.Revealer {
             lock_label.label = "<small>%s</small>".printf (GLib.Markup.escape_text (label, -1));
         }
     }
+
 }

@@ -65,7 +65,7 @@ namespace GreeterCompositor {
         public uint action;
     }
 
-    [DBus (name="org.gnome.Shell")]
+    [DBus (name = "org.gnome.Shell")]
     public class DBusAccelerator {
         static DBusAccelerator? instance;
 

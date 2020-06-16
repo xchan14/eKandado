@@ -29,8 +29,10 @@
  */
 
 public class Greeter.MainWindow : Gtk.ApplicationWindow {
-    protected static Gtk.CssProvider css_provider;
+    protected static Gtk.CssProvider style_provider;
 
+    private Gtk.CssProvider dynamic_style_provider;
+    private Gtk.StyleContext style_context;
     private GLib.Queue<unowned Greeter.UserCard> user_cards;
     private Gtk.SizeGroup card_size_group;
     private int index_delta = 0;
@@ -39,7 +41,6 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
     private LightDM.Greeter lightdm_greeter;
     private Greeter.Settings settings;
     private Gtk.ToggleButton manual_login_button;
-    private Greeter.DateTimeWidget datetime_widget;
     private unowned Greeter.BaseCard current_card;
     private unowned LightDM.UserList lightdm_user_list;
 
@@ -53,15 +54,17 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
     };
 
     static construct {
-        css_provider = new Gtk.CssProvider ();
-        css_provider.load_from_resource ("/io/elementary/greeter/MainWindow.css");
+        style_provider = new Gtk.CssProvider ();
+        style_provider.load_from_resource ("/com/paysonwallach/portico/style.css");
     }
 
     construct {
         app_paintable = true;
         decorated = false;
         type_hint = Gdk.WindowTypeHint.DESKTOP;
-        get_style_context ().add_provider (css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+        Gtk.StyleContext.add_provider_for_screen (Gdk.Screen.get_default (), style_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+        style_context = get_style_context ();
 
         settings = new Greeter.Settings ();
         create_session_selection_action ();
@@ -82,14 +85,7 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
             var gtksettings = Gtk.Settings.get_default ();
             gtksettings.gtk_icon_theme_name = "elementary";
             gtksettings.gtk_theme_name = "elementary";
-
-            var css_provider = Gtk.CssProvider.get_named (gtksettings.gtk_theme_name, "dark");
-            guest_login_button.get_style_context ().add_provider (css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
-            manual_login_button.get_style_context ().add_provider (css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
         } catch (Error e) {}
-
-        datetime_widget = new Greeter.DateTimeWidget ();
-        datetime_widget.halign = Gtk.Align.CENTER;
 
         user_cards = new GLib.Queue<unowned Greeter.UserCard> ();
 
@@ -103,21 +99,22 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
         main_grid.margin_top = main_grid.margin_bottom = 24;
         main_grid.row_spacing = 24;
         main_grid.orientation = Gtk.Orientation.VERTICAL;
-        main_grid.add (datetime_widget);
         main_grid.add (main_overlay);
         main_grid.add (extra_login_grid);
 
         add (main_grid);
 
+        Services.BackgroundManager.get_default ().background_state_changed.connect (update_background);
+
         main_overlay.get_child_position.connect ((widget, out allocation) => {
             if (widget is Greeter.UserCard && widget.is_visible ()) {
-                unowned Greeter.UserCard card = (Greeter.UserCard)widget;
+                unowned Greeter.UserCard card = (Greeter.UserCard) widget;
                 var index = user_cards.index (card) - index_delta;
                 int minimum_width, natural_width;
                 int minimum_height, natural_height;
                 widget.get_preferred_width (out minimum_width, out natural_width);
                 widget.get_preferred_height (out minimum_height, out natural_height);
-                allocation.x = main_overlay.get_allocated_width () / 2 - natural_width / 2 + index * natural_width - animation_delta;
+                allocation.x = main_overlay.get_allocated_width () / 2 - natural_width / 2 + index * natural_width - animation_delta - ((current_card == null ? ((int) user_cards.length - 1) : 0) * natural_width / 2);
                 allocation.y = main_overlay.get_allocated_height () / 2 - natural_height / 2;
                 allocation.width = natural_width;
                 allocation.height = natural_height;
@@ -219,7 +216,19 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
         key_press_event.connect ((event) => {
             // arrow key is being used to navigate
             if (event.keyval in NAVIGATION_KEYS) {
-                if (current_card is UserCard) {
+                if (current_card == null) {
+                    if (event.keyval == Gdk.Key.Left) {
+                        current_card = user_cards.peek_nth (index_delta);
+                    } else if (event.keyval == Gdk.Key.Right) {
+                        current_card = user_cards.peek_nth (user_cards.length - 1);
+                    } else {
+                        current_card = user_cards.peek_head ();
+                    }
+
+                    switch_to_card ((Greeter.UserCard) current_card);
+
+                    return true;
+                } else if (current_card is UserCard) {
                     weak Gtk.Widget? current_focus = get_focus ();
                     if (current_focus is Gtk.Entry && current_focus.is_ancestor (current_card)) {
                         if (((Gtk.Entry) current_focus).text == "") {
@@ -243,6 +252,18 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
                 }
 
                 return false;
+            } else if (event.keyval == Gdk.Key.Escape && current_card != null) {
+                unowned Greeter.UserCard card = (Greeter.UserCard) current_card;
+                card.show_input = false;
+                current_card = null;
+                index_delta = 0;
+                grab_focus ();
+
+                user_cards.head.foreach ((card) => {
+                    ((Greeter.UserCard) card).set_reveal (true);
+                });
+
+                return true;
             }
 
             // Don't focus if it is a modifier or if search_box is already focused
@@ -258,25 +279,25 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
 
         scroll_event.connect ((event) => {
             switch (event.direction) {
-                case Gdk.ScrollDirection.UP:
-                case Gdk.ScrollDirection.LEFT:
-                    activate_action ("previous", null);
-                    break;
-                case Gdk.ScrollDirection.DOWN:
-                case Gdk.ScrollDirection.RIGHT:
-                    activate_action ("next", null);
-                    break;
+            case Gdk.ScrollDirection.UP:
+            case Gdk.ScrollDirection.LEFT:
+                activate_action ("previous", null);
+                break;
+            case Gdk.ScrollDirection.DOWN:
+            case Gdk.ScrollDirection.RIGHT:
+                activate_action ("next", null);
+                break;
             }
             return false;
         });
 
         // regrab focus when dpi changed
         get_screen ().monitors_changed.connect (() => {
-            maximize_and_focus ();
+            initialize ();
         });
 
         leave_notify_event.connect (() => {
-            maximize_and_focus ();
+            initialize ();
             return false;
         });
 
@@ -289,7 +310,7 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
              * at boot.  TODO: Find whether boot sequence can be tweaked to fix this.
              */
             Timeout.add (500, () => {
-                maximize_and_focus ();
+                initialize ();
                 return Source.REMOVE;
             });
         });
@@ -305,14 +326,10 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
         }
     }
 
-    private void maximize_and_focus () {
+    private void initialize () {
         present ();
         maximize_window ();
         get_style_context ().add_class ("initialized");
-
-        if (current_card != null) {
-            current_card.grab_focus ();
-        }
     }
 
     private void maximize_window () {
@@ -350,34 +367,34 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
     private void show_message (string text, LightDM.MessageType type) {
         var messagetext = Greeter.FPrintUtils.string_to_messagetext (text);
         switch (messagetext) {
-            case Greeter.FPrintUtils.MessageText.FPRINT_TIMEOUT:
-            case Greeter.FPrintUtils.MessageText.FPRINT_ERROR:
-            case Greeter.FPrintUtils.MessageText.OTHER:
-                current_card.use_fingerprint = false;
-                break;
-            default:
-                current_card.use_fingerprint = true;
-                break;
+        case Greeter.FPrintUtils.MessageText.FPRINT_TIMEOUT:
+        case Greeter.FPrintUtils.MessageText.FPRINT_ERROR:
+        case Greeter.FPrintUtils.MessageText.OTHER:
+            current_card.use_fingerprint = false;
+            break;
+        default:
+            current_card.use_fingerprint = true;
+            break;
         }
 
         critical ("message: `%s' (%d): %s", text, type, messagetext.to_string ());
         /*var messagetext = string_to_messagetext(text);
 
-        if (messagetext == MessageText.FPRINT_SWIPE || messagetext == MessageText.FPRINT_PLACE) {
+           if (messagetext == MessageText.FPRINT_SWIPE || messagetext == MessageText.FPRINT_PLACE) {
             // For the fprint module, there is no prompt message from PAM.
             send_prompt (PromptType.FPRINT);
-        }
+           }
 
-        current_login.show_message (type, messagetext, text);*/
+           current_login.show_message (type, messagetext, text);*/
     }
 
     private void show_prompt (string text, LightDM.PromptType type = LightDM.PromptType.QUESTION) {
         critical ("prompt: `%s' (%d)", text, type);
         /*send_prompt (lightdm_prompttype_to_prompttype(type), string_to_prompttext(text), text);
 
-        had_prompt = true;
+           had_prompt = true;
 
-        current_login.show_prompt (type, prompttext, text);*/
+           current_login.show_prompt (type, prompttext, text);*/
         if (current_card is ManualCard) {
             if (type == LightDM.PromptType.SECRET) {
                 ((ManualCard) current_card).ask_password ();
@@ -391,7 +408,7 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
     private void authentication_complete () {
         var user_card = current_card as Greeter.UserCard;
         if (user_card != null) {
-             settings.last_user = user_card.lightdm_user.name;
+            settings.last_user = user_card.lightdm_user.name;
         }
 
         if (lightdm_greeter.is_authenticated) {
@@ -413,7 +430,7 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
                     _("Starting the session has failed."),
                     "dialog-error",
                     Gtk.ButtonsType.CLOSE
-                );
+                    );
                 error_dialog.show_error_details (e.message);
                 error_dialog.run ();
                 error_dialog.destroy ();
@@ -431,6 +448,7 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
     private async void load_users () {
         try {
             yield lightdm_greeter.connect_to_daemon (null);
+
         } catch (Error e) {
             critical (e.message);
         }
@@ -448,22 +466,12 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
             });
 
             unowned string? select_user = lightdm_greeter.select_user_hint;
-            var user_to_select = (select_user != null) ? select_user : settings.last_user;
-
-            bool user_selected = false;
-            if (user_to_select != null) {
+            if (select_user != null) {
                 user_cards.head.foreach ((card) => {
-                    if (card.lightdm_user.name == user_to_select) {
+                    if (card.lightdm_user.name == select_user) {
                         switch_to_card (card);
-                        user_selected = true;
                     }
                 });
-            }
-
-            if (!user_selected) {
-                unowned Greeter.UserCard user_card = (Greeter.UserCard) user_cards.peek_head ();
-                user_card.show_input = true;
-                switch_to_card (user_card);
             }
         } else {
             /* We're not certain that scaling factor will change, but try to wait for GSD in case it does */
@@ -480,7 +488,7 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
                         _("Initial Setup creates your first user. Without it, you will not be able to log in and may need to reinstall the OS."),
                         "dialog-error",
                         Gtk.ButtonsType.CLOSE
-                    );
+                        );
 
                     error_dialog.show_error_details (e.message);
                     error_dialog.run ();
@@ -527,25 +535,19 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
 
     int distance = 0;
     int next_delta = 0;
-    weak GLib.Binding? binding = null;
     private void switch_to_card (Greeter.UserCard user_card) {
-        if (next_delta != index_delta) {
-            return;
-        }
-
         current_card = user_card;
-        if (binding != null) {
-            binding.unbind ();
-        }
-
-        binding = user_card.bind_property ("is-24h", datetime_widget, "is-24h", GLib.BindingFlags.SYNC_CREATE);
         next_delta = user_cards.index (user_card);
+
         int minimum_width, natural_width;
+
         user_card.get_preferred_width (out minimum_width, out natural_width);
+
         distance = (next_delta - index_delta) * natural_width;
         user_card.notify["reveal-ratio"].connect (notify_cb);
         user_card.show_input = true;
         user_card.grab_focus ();
+
         if (index_delta != next_delta) {
             ((Greeter.UserCard) user_cards.peek_nth (index_delta)).show_input = false;
         }
@@ -567,6 +569,11 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
         } catch (Error e) {
             critical (e.message);
         }
+
+        user_cards.head.foreach ((card) => {
+            unowned Greeter.UserCard unowned_card = (Greeter.UserCard) card;
+            unowned_card.set_reveal (unowned_card == user_card);
+        });
     }
 
     private void notify_cb (GLib.Object obj, GLib.ParamSpec spec) {
@@ -623,4 +630,36 @@ public class Greeter.MainWindow : Gtk.ApplicationWindow {
             switch_to_card (next_card);
         }
     }
+
+    private void update_background (Services.BackgroundState state, uint animation_duration) {
+        if (dynamic_style_provider == null) {
+            dynamic_style_provider = new Gtk.CssProvider ();
+            style_context.add_provider (dynamic_style_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+        }
+
+        string css = """
+            .user {
+                transition: all %ums ease-in-out;
+            }
+        """.printf (animation_duration);
+
+        try {
+            dynamic_style_provider.load_from_data (css, css.length);
+        } catch (Error err) {
+            warning (@"Parsing style configuration failed: $(err.message)");
+        }
+
+        switch (state) {
+        case Services.BackgroundState.LIGHT:
+            style_context.remove_class ("dark");
+            break;
+        case Services.BackgroundState.DARK:
+            style_context.add_class ("dark");
+            break;
+        default:
+            warning (@"Invalid state: $state");
+            break;
+        }
+    }
+
 }

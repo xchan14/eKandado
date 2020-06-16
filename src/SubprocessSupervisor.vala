@@ -55,4 +55,5 @@ public class Greeter.SubprocessSupervisor : GLib.Object {
             critical (e.message);
         }
     }
+
 }

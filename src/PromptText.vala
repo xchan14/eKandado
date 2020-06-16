@@ -35,13 +35,14 @@ public enum Greeter.PromptText {
 
     public static Greeter.PromptText from_string (string text) {
         switch (text) {
-            case "login: ":
-                return Greeter.PromptText.LOGIN;
-            case "Password: ":
-                return Greeter.PromptText.PASSWORD;
-            default:
-                critical ("Unhandled prompt text: %s", text);
-                return Greeter.PromptText.OTHER;
+        case "login: ":
+            return Greeter.PromptText.LOGIN;
+        case "Password: ":
+            return Greeter.PromptText.PASSWORD;
+        default:
+            critical ("Unhandled prompt text: %s", text);
+            return Greeter.PromptText.OTHER;
         }
     }
+
 }

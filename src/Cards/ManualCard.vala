@@ -28,7 +28,7 @@
  *  Authors: Corentin Noël <corentin@elementary.io>
  */
 
- public class Greeter.ManualCard : Greeter.BaseCard {
+public class Greeter.ManualCard : Greeter.BaseCard {
     public signal void do_connect_username (string username);
 
     private Greeter.PasswordEntry password_entry;
@@ -83,11 +83,6 @@
         main_grid = new Gtk.Grid ();
         main_grid.margin = 12;
         main_grid.add (form_grid);
-
-        var main_grid_style_context = main_grid.get_style_context ();
-        main_grid_style_context.add_class (Granite.STYLE_CLASS_CARD);
-        main_grid_style_context.add_class ("rounded");
-        main_grid_style_context.add_provider (css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
 
         add (main_grid);
 
@@ -162,4 +157,5 @@
             return GLib.Source.REMOVE;
         });
     }
+
 }
