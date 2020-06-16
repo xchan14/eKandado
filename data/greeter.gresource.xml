@@ -3,9 +3,9 @@
     <file alias="Card.css" compressed="true">Card.css</file>
     <file alias="DateTime.css" compressed="true">DateTime.css</file>
     <file alias="MainWindow.css" compressed="true">MainWindow.css</file>
-  <gresource prefix="/com/paysonwallach/greeter">
+  <gresource prefix="/com/paysonwallach/portico">
   </gresource>
-  <gresource prefix="/com/paysonwallach/greeter/icons">
+  <gresource prefix="/com/paysonwallach/portico/icons">
     <file alias="/symbolic/fingerprint.svg" compressed="true">fingerprint.svg</file>
   </gresource>
 </gresources>

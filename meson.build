@@ -2,7 +2,7 @@ project(
     'vala', 'c',
     version: '5.0.4',
     meson_version: '>= 0.49.0'
-  'com.paysonwallach.greeter',
+  'com.paysonwallach.portico',
 )
 
 gnome = import('gnome')

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema path="/com/paysonwallach/greeter/" id="com.paysonwallach.greeter">
+  <schema path="/com/paysonwallach/portico/" id="com.paysonwallach.portico">
     <key name="picture-options" enum="org.gnome.desktop.GDesktopBackgroundStyle">
       <default>'zoom'</default>
       <summary>Picture Options</summary>

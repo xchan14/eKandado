@@ -42,7 +42,7 @@ public int main (string[] args) {
     Greeter.SubprocessSupervisor wingpanel;
 
     try {
-        compositor = new Greeter.SubprocessSupervisor ({"io.elementary.greeter-compositor"});
+        compositor = new Greeter.SubprocessSupervisor ({"com.paysonwallach.portico-compositor"});
     } catch (Error e) {
         critical (e.message);
     }

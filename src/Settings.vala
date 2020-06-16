@@ -98,7 +98,7 @@ public class Greeter.Settings : GLib.Object {
     }
 
     construct {
-        var state_dir = GLib.Path.build_filename (GLib.Environment.get_user_cache_dir (), "io.elementary.greeter");
+        var state_dir = GLib.Path.build_filename (GLib.Environment.get_user_cache_dir (), "com.paysonwallach.portico");
         GLib.DirUtils.create_with_parents (state_dir, 0775);
 
         unowned string? xdg_seat = GLib.Environment.get_variable ("XDG_SEAT");
@@ -115,7 +115,7 @@ public class Greeter.Settings : GLib.Object {
 
         settings = new GLib.KeyFile ();
         try {
-            var greeter_conf_file = GLib.Path.build_filename (Constants.CONF_DIR, "io.elementary.greeter.conf");
+            var greeter_conf_file = GLib.Path.build_filename (Constants.CONF_DIR, "com.paysonwallach.portico.conf");
             settings.load_from_file (greeter_conf_file, GLib.KeyFileFlags.NONE);
         } catch (Error e) {
             critical (e.message);

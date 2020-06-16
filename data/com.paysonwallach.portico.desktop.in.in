@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=Pantheon Greeter
-Comment=Pantheon Greeter
+Name=Portico
+Comment=LightDM Greeter for Pantheon Shell
 Exec=@PROJECT_NAME@
 Type=Application
 X-Ubuntu-Gettext-Domain=@GETTEXT_PACKAGE@
